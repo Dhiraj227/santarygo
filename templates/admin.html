@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard | Pad Dispensers</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.css" />
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --secondary-color: #2C3E50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .main-container {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .map-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .location-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .location-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .status-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .status-title {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        #getPad {
+            background: var(--primary-color);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(74, 144, 226, 0.2);
+        }
+
+        #getPad:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(74, 144, 226, 0.3);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .leaflet-container {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .modal-header {
+            border-bottom: none;
+            padding: 1.5rem 1.5rem 0.5rem;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            border-top: none;
+            padding: 0.5rem 1.5rem 1.5rem;
+        }
+
+        .form-control {
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .form-control:focus {
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .btn-nav {
+            padding: 0.5rem 1rem;
+            color: var(--secondary-color);
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-nav:hover {
+            background-color: #e9ecef;
+            color: var(--primary-color);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .btn-nav-logout {
+            padding: 0.5rem 1rem;
+            color: #dc3545;
+            background-color: #fff;
+            border: 1px solid #dc3545;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-nav-logout:hover {
+            background-color: #dc3545;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(220,53,69,0.2);
+        }
+
+        .nav-buttons {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Additional styles for admin page */
+        .admin-form {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .admin-form .form-label {
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-form .form-control {
+            margin-bottom: 1rem;
+        }
+
+        .success-message {
+            display: none;
+            background-color: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .error-message {
+            display: none;
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        #map {
+            height: 400px;
+        }
+
+        .location-preview {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-map-marker-alt me-2"></i>
+                Admin Dashboard
+            </a>
+            <div class="d-flex align-items-center">
+                <a href="/" class="btn btn-outline-primary me-3">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Back to Map
+                </a>
+                <span class="me-3">
+                    <i class="fas fa-user-shield"></i>
+                    Admin
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="row">
+            <!-- Map Section -->
+            <div class="col-lg-8">
+                <div class="map-container">
+                    <div class="location-header">
+                        <div class="location-title">
+                            <i class="fas fa-map-marked-alt me-2"></i>
+                            Dispenser Locations
+                        </div>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="refreshMap()">
+                            <i class="fas fa-rotate me-1"></i>
+                            Refresh Map
+                        </button>
+                    </div>
+                    <div id="map"></div>
+                </div>
+            </div>
+
+            <!-- Admin Form Section -->
+            <div class="col-lg-4">
+                <div class="admin-form">
+                    <h4 class="mb-4">Add New Dispenser</h4>
+                    
+                    <div class="success-message" id="successMessage">
+                        Dispenser added successfully!
+                    </div>
+                    
+                    <div class="error-message" id="errorMessage">
+                        Error adding dispenser. Please try again.
+                    </div>
+
+                    <form id="dispenserForm">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Dispenser Name</label>
+                            <input type="text" class="form-control" id="name" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <textarea class="form-control" id="address" rows="2" required></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="latitude" class="form-label">Latitude</label>
+                            <input type="number" step="any" class="form-control" id="latitude" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="longitude" class="form-label">Longitude</label>
+                            <input type="number" step="any" class="form-control" id="longitude" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="pads" class="form-label">Number of Pads Available</label>
+                            <input type="number" class="form-control" id="pads" min="0" required>
+                        </div>
+
+                        <div class="location-preview mb-3">
+                            Tip: Click on the map to set coordinates automatically
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            Add Dispenser
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.js"></script>
+
+    <script>
+        // Initialize map
+        var map = L.map('map').setView([19.0330, 73.0297], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Custom icon for dispensers
+        const dispenserIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: "<div style='background-color: red; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white;'></div>",
+            iconSize: [15, 15],
+            iconAnchor: [7, 7]
+        });
+
+        // Function to load and display dispensers
+        function loadDispensers() {
+            fetch('/get-dispensers')
+                .then(response => response.json())
+                .then(dispensers => {
+                    // Clear existing markers
+                    map.eachLayer((layer) => {
+                        if (layer instanceof L.Marker) {
+                            map.removeLayer(layer);
+                        }
+                    });
+
+                    // Add markers for each dispenser
+                    dispensers.forEach(disp => {
+                        L.marker([disp.latitude, disp.longitude], { icon: dispenserIcon })
+                            .addTo(map)
+                            .bindPopup(`<b>${disp.name}</b><br>${disp.address}<br>Pads Available: ${disp.pads_available}`);
+                    });
+                })
+                .catch(error => console.error('Error loading dispensers:', error));
+        }
+
+        // Load initial dispensers
+        loadDispensers();
+
+        // Click on map to set coordinates
+        map.on('click', function(e) {
+            document.getElementById('latitude').value = e.latlng.lat.toFixed(6);
+            document.getElementById('longitude').value = e.latlng.lng.toFixed(6);
+        });
+
+        // Handle form submission
+        document.getElementById('dispenserForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const newDispenser = {
+                name: document.getElementById('name').value,
+                address: document.getElementById('address').value,
+                latitude: parseFloat(document.getElementById('latitude').value),
+                longitude: parseFloat(document.getElementById('longitude').value),
+                pads_available: parseInt(document.getElementById('pads').value)
+            };
+
+            fetch('/add-dispenser', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(newDispenser)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('successMessage').style.display = 'block';
+                    document.getElementById('errorMessage').style.display = 'none';
+                    document.getElementById('dispenserForm').reset();
+                    loadDispensers(); // Refresh map
+                    setTimeout(() => {
+                        document.getElementById('successMessage').style.display = 'none';
+                    }, 3000);
+                } else {
+                    throw new Error('Failed to add dispenser');
+                }
+            })
+            .catch(error => {
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('successMessage').style.display = 'none';
+                setTimeout(() => {
+                    document.getElementById('errorMessage').style.display = 'none';
+                }, 3000);
+            });
+        });
+
+        // Refresh map
+        function refreshMap() {
+            loadDispensers();
+        }
+    </script>
+</body>
+</html>

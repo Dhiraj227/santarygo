@@ -1,0 +1,44 @@
+[
+    {
+        "name": "Terna Health Center",
+        "latitude": 19.038553,
+        "longitude": 73.014654,
+        "address": "Terna Hospital, Nerul (W), Navi Mumbai",
+        "pads_available": 20
+    },
+    {
+        "name": "Community Clinic",
+        "latitude": 19.019818,
+        "longitude": 73.019253,
+        "address": "Sector 40, Seawoods",
+        "pads_available": 15
+    },
+    {
+        "name": "Women's Help Center",
+        "latitude": 19.026006,
+        "longitude": 73.010037,
+        "address": "Jewels, Seawoods, Navi Mumbai",
+        "pads_available": 10
+    },
+    {
+        "name": "Teresa Ppoint",
+        "address": "fefed fefe",
+        "latitude": 19.028447,
+        "longitude": 73.022914,
+        "pads_available": 60
+    },
+    {
+        "name": "Airport",
+        "address": "dddd",
+        "latitude": 18.990259,
+        "longitude": 73.042328,
+        "pads_available": 40
+    },
+    {
+        "name": "terna",
+        "address": "at room no 42",
+        "latitude": 19.024533,
+        "longitude": 73.03745,
+        "pads_available": 50
+    }
+]
